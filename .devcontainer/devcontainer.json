@@ -1,0 +1,13 @@
+{
+    "name": "cserialize-deno",
+    "dockerComposeFile": ["./compose.yml"],
+    "service": "deno",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "denoland.vscode-deno"
+            ]
+        }
+    }
+}

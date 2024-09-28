@@ -1,10 +1,5 @@
 {
 	"name": "@yukimura/cserialize",
-	"publish": {
-		"exclude": [
-			"dist/"
-		]
-	},
 	"version": "0.0.1",
 	"license": "MIT",
 	"tasks": {
@@ -14,9 +9,15 @@
 	"imports": {
 		"@std/assert": "jsr:@std/assert@1",
 		"@std/fs": "jsr:@std/fs@^1.0.4",
-		"@std/path": "jsr:@std/path@^1.0.6"
+		"@std/path": "jsr:@std/path@^1.0.6",
+		"@/": "./src/"
 	},
 	"exports": "./mod.ts",
+	"publish": {
+		"exclude": [
+			"dist/"
+		]
+	},
 	"compilerOptions": {
 		"lib": [
 			"dom",

@@ -1,0 +1,10 @@
+name: cserialize
+
+services:
+  deno:
+    container_name: cserialize-deno
+    image: denoland/deno:latest
+    volumes:
+      - ../:/workspace:cached
+    tty: true
+    command: sleep infinity
