@@ -1,17 +1,44 @@
-import { assert, assertFalse, assertThrows } from '@std/assert';
-import Cserialize from '@/cserialize.ts';
+import { assert, assertEquals, assertFalse, assertThrows, assertStrictEquals } from '@std/assert';
+import { Cserialize } from '@/cserialize.ts';
+import { CommaCsvParser } from '@/utils/parser/impl/CommaCsvParser.ts';
+import { TabCsvParser } from '@/utils/parser/impl/TabCsvParser.ts';
+import { SemicolonCsvParser } from '@/utils/parser/impl/SemicolonCsvParser.ts';
 
-Deno.test('validate method tests', async (t) => {
-    await t.step('return true if valid csv', async () => {
-        const validCsv = 'foo1,foo2,foo3';
+Deno.test('delimiter method test', async (t) => {
+    await t.step('parser is correctly set', async () => {
+        const cserializeComma = Cserialize.delimiter(',');
+        assertEquals(cserializeComma.parser(), new CommaCsvParser());
 
-        assert(Cserialize.validate(validCsv));
+        const cserializeTab = Cserialize.delimiter('\t');
+        assertEquals(cserializeTab.parser(), new TabCsvParser());
 
+        const cserializeSemicolon = Cserialize.delimiter(';');
+        assertEquals(cserializeSemicolon.parser(), new SemicolonCsvParser());
     });
-    
-    await t.step('return false if invalid csv', async () => {
-        const invalidCsv = 'foo1    foo2,foo3';
-    
-        assertFalse(Cserialize.validate(invalidCsv));
+
+    await t.step('should throw at unknown delimiter', async () => {
+        assertThrows(() => {
+            Cserialize.delimiter(':' as ',');
+        }, Error);
+    })
+})
+
+Deno.test('setData method test', async (t) => {
+    const scerialize = Cserialize.use(new CommaCsvParser());
+
+    await t.step('register data correctly', async () => {
+        scerialize.setData({
+            headers: ['foo', 'bar', 'hoge'],
+            rows: [
+                ['foo_value_1', 'bar_value_1', 'hoge_value_1'],
+                ['foo_value_2', 'bar_value_2', 'hoge_value_2']
+            ]
+        });
+
+        const data = scerialize.data();
+
+        assertEquals(data.headers, ['foo', 'bar', 'hoge']);
+        assertEquals(data.rows[0], ['foo_value_1', 'bar_value_1', 'hoge_value_1']);
+        assertEquals(data.maps[1].get('bar'), 'bar_value_2');
     });
-});
+ });

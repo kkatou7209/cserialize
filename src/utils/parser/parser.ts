@@ -4,7 +4,7 @@ interface ParserConfig {
 
     parse: {
         /** ignore first row */
-        skipFirst: boolean;
+        skipFirst?: boolean;
     
         /** remove quotations at parsing */
         removeQuote?: boolean;
@@ -44,6 +44,9 @@ interface Parser {
     stringify(csv: Csv): string;
 }
 
+/**
+ * parsers abstract class
+ */
 abstract class AbstractParser implements Parser {
 
 	/**
@@ -55,10 +58,24 @@ abstract class AbstractParser implements Parser {
 
 	abstract stringify(csv: Csv): string;
 
+    /**
+     * Sets configuration
+     * 
+     * @param config 
+     */
     public setConfig(config: ParserConfig): void {
         this.config = {
             ...config
         }
+    }
+
+    /**
+     * Returns config object
+     * 
+     * @returns {ParserConfig}
+     */
+    public getConfig(): ParserConfig {
+        return this.config;
     }
 }
 

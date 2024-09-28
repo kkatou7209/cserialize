@@ -89,6 +89,13 @@ class Cserialize {
         return this;
     }
 
+    public stringify(): string {
+        if (this.#data === null) {
+            throw new Error('trying to stringify null');
+        }
+        return this.#parser.stringify(this.#data);
+    }
+
     /**
      * 
      * @param {{ headers: string[]; rows: string[][] }} data 
@@ -113,6 +120,8 @@ class Cserialize {
 
             _data.maps.push(map);
         });
+
+        this.#data = _data;
     }
 
     /**
@@ -122,6 +131,14 @@ class Cserialize {
      */
     public data(): Csv{
         return this.#data ?? new Csv();
+    }
+
+    /**
+     * Returns current parser
+     * @returns 
+     */
+    public parser(): Parser {
+        return this.#parser;
     }
 
     /**

@@ -9,17 +9,17 @@ class CommaCsvParser extends AbstractParser {
     
 	public stringify(csv: Csv): string {
         const headers = csv.headers.map(header => header);
-        const rows = csv.rows.map(row => row);
+        let rows = csv.rows.map(row => row);
 
 		if (this.config.stringify.wrapWithQuote) {
-            rows.forEach(row => {
-                row.forEach(value => value = value.replace(/["']/, ''));
-            })
+            rows = rows.map(row => {
+                return row.map(value => value.replaceAll(/("|')/g, ''));
+            });
 
             const quote = this.config.stringify.quoteType === 'double' ? `"` : `'`;
 
-            rows.forEach(row => {
-                row.forEach(value => value = quote + value + quote);
+            rows = rows.map(row => {
+                return row.map(value => quote + value + quote);
             })
         }
         
@@ -36,7 +36,9 @@ class CommaCsvParser extends AbstractParser {
 
         rows.forEach(row => result += row.join(',') + newline);
 
-        result = result.replace(/(^(\n\r|\n)|(\n\r|\n)$)/, '');
+        console.log(rows);
+
+        result = result.replaceAll(/(^(\n\r|\n)|(\n\r|\n)$)/g, '');
 
         return result;
 	}
