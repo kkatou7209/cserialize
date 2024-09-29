@@ -1,5 +1,5 @@
-import { AbstractParser } from '@/utils/parser/parser.ts';
-import type { Csv } from '@/utils/model/csv.ts';
+import { AbstractParser } from '../parser.ts';
+import type { Csv } from '@/model/csv.ts';
 
 class SemicolonCsvParser extends AbstractParser {
 

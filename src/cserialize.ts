@@ -1,10 +1,17 @@
-import { CommaCsvParser } from '@/utils/parser/impl/CommaCsvParser.ts';
-import type { Parser } from './utils/parser/parser.ts';
-import { TabCsvParser } from '@/utils/parser/impl/TabCsvParser.ts';
-import { SemicolonCsvParser } from '@/utils/parser/impl/SemicolonCsvParser.ts';
-import { Csv } from '@/utils/model/csv.ts';
+import { CommaCsvParser } from '@/parser/impl/CommaCsvParser.ts';
+import type { Parser } from '@/parser/parser.ts';
+import { TabCsvParser } from '@/parser/impl/TabCsvParser.ts';
+import { SemicolonCsvParser } from '@/parser/impl/SemicolonCsvParser.ts';
+import { Csv } from '@/model/csv.ts';
+import { readFromFile } from '@/utils/reader.ts';
 
-class Cserialize {
+export type DelimiterOptions = 'comma' | 'tab' | 'semi';
+
+export type CsvHeaders = string[];
+
+export type CsvRows = string[][];
+
+export class Cserialize {
     /**
      * csv parser
      */
@@ -13,12 +20,17 @@ class Cserialize {
     /**
      * csv data
      */
-    #data: Csv | null = null;
+    #data: Csv = new Csv();
 
     /**
      * csv source data
      */
     #source: string | File | null = null;
+
+    /**
+     * csv text file encoding
+     */
+    #fileEncoding = 'UTF-8'
 
     /**
      * @param parser 
@@ -43,16 +55,16 @@ class Cserialize {
      * @param {string} delimiter 
      * @returns {Cserialize} Cserialize instance
      */
-    public static delimiter(delimiter: ',' | '\t' | ';'): Cserialize {
+    public static delimiter(delimiter: DelimiterOptions): Cserialize {
         switch (delimiter) {
-            case ',':
+            case 'comma':
                 return new Cserialize(new CommaCsvParser);
-            case '\t':
+            case 'tab':
                 return new Cserialize(new TabCsvParser);
-            case ';':
+            case 'semi':
                 return new Cserialize(new SemicolonCsvParser);
             default:
-                throw new Error(`unknown delimiter: ${delimiter}`);
+                throw new Error(`unknown delimiter name: ${delimiter}`);
         }
     }
 
@@ -61,8 +73,9 @@ class Cserialize {
      * 
      * @param {string | File} csv --- string or file
      */
-    public read(csv: string | File): Cserialize {
+    public read(csv: string | File, fileEncoding: string = 'UTF-8'): Cserialize {
         this.#source = csv;
+        this.#fileEncoding = fileEncoding;
 
         return this;
     }
@@ -82,9 +95,9 @@ class Cserialize {
             return this;
         }
 
-        const data = await this.#source.text();
+        const text = await readFromFile(this.#source);
 
-        this.#data = this.#parser.parse(data);
+        this.#data = this.#parser.parse(text);
 
         return this;
     }
@@ -129,8 +142,54 @@ class Cserialize {
      * 
      * @returns {Csv | null}
      */
-    public data(): Csv{
-        return this.#data ?? new Csv();
+    public data(): Csv {
+        return this.#data;
+    }
+
+    public getHeaders(): CsvHeaders {
+        return this.#data.headers.map(header => header);
+    }
+
+    public getRows(): CsvRows {
+        return this.#data.rows.map(row => row.map(value => value));
+    }
+
+    public getValueByHeader(header: string, rowIndex: number): string {
+        if (this.#data.rows.length === 0) {
+            throw new Error('Row data are empty. Initialize data first.');
+        }
+
+        if (this.#data.headers.length === 0) {
+            throw new Error('Data was initialized with no header. You can not access them via header.');
+        }
+
+        if (!this.#data.headers.includes(header)) {
+            throw new Error(`No such header: ${header}. Check that your data have header "${header}.`);
+        }
+
+        if (rowIndex > this.#data.rows.length - 1) {
+            throw new Error('Given index is bigger than number of rows.');
+        }
+
+        const index = this.#data.headers.indexOf(header);
+
+        return this.#data.rows[rowIndex][index];
+    }
+
+    public getValueByIndex(index: number, rowIndex: number): string {
+        if (this.#data.rows.length === 0) {
+            throw new Error('Row data are empty. Initialize data first.');
+        }
+
+        if (rowIndex > this.#data.rows.length - 1) {
+            throw new Error('Given row index is bigger than number of rows.');
+        }
+
+        if (index > this.#data.rows[rowIndex].length - 1) {
+            throw new Error('Given index is bigger than number of values.');
+        }
+
+        return this.#data.rows[rowIndex][index];
     }
 
     /**
@@ -153,5 +212,3 @@ class Cserialize {
         return true;
     }
 }
-
-export { Cserialize }

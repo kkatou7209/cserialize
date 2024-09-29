@@ -1,6 +1,5 @@
-import { CommaCsvParser } from '@/utils/parser/impl/CommaCsvParser.ts';
+import { CommaCsvParser } from '../../src/parser/impl/CommaCsvParser.ts';
 import { assertEquals } from '@std/assert/equals';
-import { assert } from '@std/assert/assert';
 
 Deno.test('config test', async (t) => {
     await t.step('setData works correctly', async () => {

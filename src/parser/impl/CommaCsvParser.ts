@@ -1,5 +1,5 @@
-import { type Parser, type ParserConfig, AbstractParser } from '@/utils/parser/parser.ts';
-import type { Csv } from '@/utils/model/csv.ts';
+import { type Parser, type ParserConfig, AbstractParser } from '../parser.ts';
+import type { Csv } from '@/model/csv.ts';
 
 class CommaCsvParser extends AbstractParser {
 

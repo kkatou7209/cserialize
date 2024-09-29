@@ -6,19 +6,19 @@ import { SemicolonCsvParser } from '@/utils/parser/impl/SemicolonCsvParser.ts';
 
 Deno.test('delimiter method test', async (t) => {
     await t.step('parser is correctly set', async () => {
-        const cserializeComma = Cserialize.delimiter(',');
+        const cserializeComma = Cserialize.delimiter('comma');
         assertEquals(cserializeComma.parser(), new CommaCsvParser());
 
-        const cserializeTab = Cserialize.delimiter('\t');
+        const cserializeTab = Cserialize.delimiter('tab');
         assertEquals(cserializeTab.parser(), new TabCsvParser());
 
-        const cserializeSemicolon = Cserialize.delimiter(';');
+        const cserializeSemicolon = Cserialize.delimiter('semi');
         assertEquals(cserializeSemicolon.parser(), new SemicolonCsvParser());
     });
 
     await t.step('should throw at unknown delimiter', async () => {
         assertThrows(() => {
-            Cserialize.delimiter(':' as ',');
+            Cserialize.delimiter('unknown' as 'comma');
         }, Error);
     })
 })

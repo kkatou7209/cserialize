@@ -1,4 +1,4 @@
-import type { Csv } from '@/utils/model/csv.ts';
+import type { Csv } from '@/model/csv.ts';
 
 interface ParserConfig {
 

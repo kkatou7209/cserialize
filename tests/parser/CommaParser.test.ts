@@ -1,5 +1,5 @@
 import { Cserialize } from '@/cserialize.ts';
-import { CommaCsvParser } from '@/utils/parser/impl/CommaCsvParser.ts';
+import { CommaCsvParser } from '../../src/parser/impl/CommaCsvParser.ts';
 import { assertEquals } from '@std/assert/equals';
 
 Deno.test('stringify method test', async (t) => {

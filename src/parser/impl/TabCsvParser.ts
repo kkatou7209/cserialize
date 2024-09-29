@@ -1,5 +1,5 @@
-import { AbstractParser, type Parser } from '@/utils/parser/parser.ts';
-import type { Csv } from '@/utils/model/csv.ts';
+import { AbstractParser, type Parser } from '../parser.ts';
+import type { Csv } from '@/model/csv.ts';
 
 
 class TabCsvParser extends AbstractParser {
