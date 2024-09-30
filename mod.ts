@@ -1,5 +1,5 @@
-import { Cserialize } from '@/cserialize.ts';
-import type { DelimiterOptions } from '@/cserialize.ts';
+import { Cserialize } from './src/Cserialize.ts';
+import type { DelimiterOptions } from './src/Cserialize.ts';
 
 import { CommaCsvParser } from '@/parser/impl/CommaCsvParser.ts';
 import { TabCsvParser } from '@/parser/impl/TabCsvParser.ts';

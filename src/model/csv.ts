@@ -1,5 +1,3 @@
-import type { Row } from '@/types/csv.ts';
-
 /**
  * model class represents csv data
  */
@@ -8,7 +6,7 @@ class Csv {
 
     public rows: string[][] = [];
 
-    public maps: Map<string, string>[] = [];
+    public maps: Map<string | number, string>[] = [];
 }
 
 export { Csv };

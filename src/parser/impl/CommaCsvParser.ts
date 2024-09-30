@@ -1,10 +1,55 @@
 import { type Parser, type ParserConfig, AbstractParser } from '../parser.ts';
-import type { Csv } from '@/model/csv.ts';
+import { Csv } from '@/model/csv.ts';
 
 class CommaCsvParser extends AbstractParser {
 
 	public parse(csv: string): Csv {
-		throw new Error('Method not implemented.');
+        const csvRows = csv.split(/\r?\n/);
+
+        if (csvRows.length <= 0) {
+            throw new Error("Invalid csv format");
+        }
+
+        const headers: string[] = [];
+
+        if (!this.config.parse.skipFirst) {
+            csvRows.forEach(header => {
+                headers.push(header);
+            });
+            csvRows.pop();
+        }
+
+        const rows = csvRows.map(row => row.match(/("[^"]+"|'[^']+'|[^,]+)/)?.map(value => value) ?? []);
+
+        const data = new Csv();
+
+        data.headers = headers;
+
+        data.rows = rows;
+
+        if (!this.config.parse.skipFirst) {
+            data.maps = headers.map((header, index) => {
+                const map = new Map();
+
+                rows.forEach(row => {
+                    map.set(header, row[index]);
+                })
+
+                return map;
+            })
+
+            return data;
+        }
+
+        data.maps = rows.map(row => {
+            const map = new Map();
+
+            row.forEach((value, index) => map.set(index, value));
+
+            return map;
+        });
+
+        return data;
 	}
     
 	public stringify(csv: Csv): string {

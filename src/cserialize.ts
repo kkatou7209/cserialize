@@ -3,7 +3,6 @@ import type { Parser } from '@/parser/parser.ts';
 import { TabCsvParser } from '@/parser/impl/TabCsvParser.ts';
 import { SemicolonCsvParser } from '@/parser/impl/SemicolonCsvParser.ts';
 import { Csv } from '@/model/csv.ts';
-import { readFromFile } from '@/utils/reader.ts';
 
 export type DelimiterOptions = 'comma' | 'tab' | 'semi';
 
@@ -11,6 +10,9 @@ export type CsvHeaders = string[];
 
 export type CsvRows = string[][];
 
+/**
+ * Manager class 
+ */
 export class Cserialize {
     /**
      * csv parser
@@ -25,7 +27,7 @@ export class Cserialize {
     /**
      * csv source data
      */
-    #source: string | File | null = null;
+    #source: string | null = null;
 
     /**
      * csv text file encoding
@@ -33,6 +35,7 @@ export class Cserialize {
     #fileEncoding = 'UTF-8'
 
     /**
+     * Returns current csv parser
      * @param parser 
      */
     constructor(parser: Parser) {
@@ -73,7 +76,7 @@ export class Cserialize {
      * 
      * @param {string | File} csv --- string or file
      */
-    public read(csv: string | File, fileEncoding: string = 'UTF-8'): Cserialize {
+    public read(csv: string, fileEncoding: string = 'UTF-8'): Cserialize {
         this.#source = csv;
         this.#fileEncoding = fileEncoding;
 
@@ -85,19 +88,12 @@ export class Cserialize {
      * 
      * @returns {Parser} csv parser
      */
-    public async parse(): Promise<Cserialize> {
+    public parse(): Cserialize {
         if (this.#source === null) {
             throw new Error('data is null');
         }
 
-        if (typeof this.#source === 'string') {
-            this.#data = this.#parser.parse(this.#source);
-            return this;
-        }
-
-        const text = await readFromFile(this.#source);
-
-        this.#data = this.#parser.parse(text);
+        this.#data = this.#parser.parse(this.#source);
 
         return this;
     }
@@ -154,6 +150,13 @@ export class Cserialize {
         return this.#data.rows.map(row => row.map(value => value));
     }
 
+    /**
+     * Returns csv value retrieved by row index and header name
+     * 
+     * @param header 
+     * @param rowIndex 
+     * @returns 
+     */
     public getValueByHeader(header: string, rowIndex: number): string {
         if (this.#data.rows.length === 0) {
             throw new Error('Row data are empty. Initialize data first.');
@@ -176,6 +179,13 @@ export class Cserialize {
         return this.#data.rows[rowIndex][index];
     }
 
+    /**
+     * Return csv value retrieved by row number and row offset
+     * 
+     * @param {number} index row offset
+     * @param {number} rowIndex number of row
+     * @returns {string} csv value
+     */
     public getValueByIndex(index: number, rowIndex: number): string {
         if (this.#data.rows.length === 0) {
             throw new Error('Row data are empty. Initialize data first.');
@@ -210,5 +220,17 @@ export class Cserialize {
         if (this.#data.rows.length === 0) return false;
 
         return true;
+    }
+
+    /**
+     * Check wether data have headers or not
+     * @returns {boolean} header is present then true 
+     */
+    public hasHeaders(): boolean {
+        if (this.#data.headers.length > 0) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -1,8 +1,18 @@
 import { assert, assertEquals, assertFalse, assertThrows, assertStrictEquals } from '@std/assert';
-import { Cserialize } from '@/cserialize.ts';
-import { CommaCsvParser } from '@/utils/parser/impl/CommaCsvParser.ts';
-import { TabCsvParser } from '@/utils/parser/impl/TabCsvParser.ts';
-import { SemicolonCsvParser } from '@/utils/parser/impl/SemicolonCsvParser.ts';
+import Cserialize, { 
+    CommaCsvParser, 
+    TabCsvParser, 
+    SemicolonCsvParser
+} from '../mod.ts';
+
+Deno.test('initialization test', async (t) => {
+    const source = `foo,bar,hoge\n\r"foo_0",bar_0,"hoge_0"\n\r"foo_1",bar_0,"hoge_1"\n\r"foo_2",bar_2,"hoge_2"`;
+
+    await t.step('set data currectly', async () => {
+        const instance = Cserialize.delimiter('comma')
+            .read('')
+    })
+})
 
 Deno.test('delimiter method test', async (t) => {
     await t.step('parser is correctly set', async () => {
