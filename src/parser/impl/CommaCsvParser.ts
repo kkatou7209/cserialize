@@ -21,7 +21,10 @@ class CommaCsvParser extends AbstractParser {
             csvRowStrings.shift();
         }
 
-        const rows = csvRowStrings.map(row => this.separate(row));
+        const rows = this.config.parse.removeQuote ?
+            csvRowStrings.map(row => this.separate(row).map(value => value.replace(/["']+/g, ''))) :
+            csvRowStrings.map(row => this.separate(row));
+
 
         const data = new Csv();
 
@@ -30,14 +33,18 @@ class CommaCsvParser extends AbstractParser {
         data.rows = rows;
 
 
-        if (!this.config.parse?.skipFirst) {
+        if (!this.config.parse.skipFirst) {
             data.maps = rows.map((row) => {
 
                 const map = new Map();
-                
+
                 headers.forEach((header, index) => {
-                    map.set(header, row[index]);
-                })
+                    if (this.config.parse.removeQuote) {
+                        map.set(header, row[index].replace(/["']+/g, ''));
+                    } else {
+                        map.set(header, row[index]);
+                    }
+                });
 
                 return map;
             })
@@ -48,7 +55,13 @@ class CommaCsvParser extends AbstractParser {
         data.maps = rows.map(row => {
             const map = new Map();
 
-            row.forEach((value, index) => map.set(index, value));
+            row.forEach((value, index) => {
+                if (this.config.parse.removeQuote) {
+                    map.set(index, value.replace(/["']+/g, ''))
+                } else {
+                    map.set(index, value)
+                }
+            });
 
             return map;
         });
@@ -77,7 +90,7 @@ class CommaCsvParser extends AbstractParser {
         }
 
         let result = '';
-        const newline = this.config.stringify?.newLineType === 'LF' ? '\n' : '\n\r';
+        const newline = this.config.stringify?.newLineType === 'LF' ? '\n' : '\r\n';
 
         if (headers.length > 0) {
             result += headers.join(',') + newline;
@@ -85,7 +98,7 @@ class CommaCsvParser extends AbstractParser {
 
         rows.forEach(row => result += row.join(',') + newline);
 
-        result = result.replaceAll(/(^(\n\r|\n)|(\n\r|\n)$)/g, '');
+        result = result.replaceAll(/(^(\r\n|\n)|(\r\n|\n)$)/g, '');
 
         return result;
 	}
