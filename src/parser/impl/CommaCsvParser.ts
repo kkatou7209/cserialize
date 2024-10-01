@@ -1,25 +1,27 @@
-import { type Parser, type ParserConfig, AbstractParser } from '../parser.ts';
+import { AbstractParser } from '../parser.ts';
 import { Csv } from '@/model/csv.ts';
 
 class CommaCsvParser extends AbstractParser {
 
-	public parse(csv: string): Csv {
-        const csvRows = csv.split(/\r?\n/);
+    private separate(csv: string): string[] {
+        return csv.match(/("[^"]+"|'[^']+'|[^,]+)/g)?.map(value => value) ?? [];
+    }
 
-        if (csvRows.length <= 0) {
+	public parse(csv: string): Csv {
+        const csvRowStrings = csv.split(/(\r?\n)/).filter(val => !/\r?\n/.test(val));
+
+        if (csvRowStrings.length <= 0) {
             throw new Error("Invalid csv format");
         }
 
         const headers: string[] = [];
 
-        if (!this.config.parse.skipFirst) {
-            csvRows.forEach(header => {
-                headers.push(header);
-            });
-            csvRows.pop();
+        if (!this.config.parse?.skipFirst) {
+            this.separate(csvRowStrings[0]).forEach(val => headers.push(val));
+            csvRowStrings.shift();
         }
 
-        const rows = csvRows.map(row => row.match(/("[^"]+"|'[^']+'|[^,]+)/)?.map(value => value) ?? []);
+        const rows = csvRowStrings.map(row => this.separate(row));
 
         const data = new Csv();
 
@@ -27,11 +29,13 @@ class CommaCsvParser extends AbstractParser {
 
         data.rows = rows;
 
-        if (!this.config.parse.skipFirst) {
-            data.maps = headers.map((header, index) => {
-                const map = new Map();
 
-                rows.forEach(row => {
+        if (!this.config.parse?.skipFirst) {
+            data.maps = rows.map((row) => {
+
+                const map = new Map();
+                
+                headers.forEach((header, index) => {
                     map.set(header, row[index]);
                 })
 
@@ -56,32 +60,30 @@ class CommaCsvParser extends AbstractParser {
         const headers = csv.headers.map(header => header);
         let rows = csv.rows.map(row => row);
 
-		if (this.config.stringify.wrapWithQuote) {
+		if (this.config.stringify?.wrapWithQuote) {
             rows = rows.map(row => {
                 return row.map(value => value.replaceAll(/("|')/g, ''));
             });
 
-            const quote = this.config.stringify.quoteType === 'double' ? `"` : `'`;
+            const quote = this.config.stringify?.quoteType === 'double' ? `"` : `'`;
 
             rows = rows.map(row => {
                 return row.map(value => quote + value + quote);
             })
         }
         
-        if (this.config.stringify.noHeader) {
+        if (this.config.stringify?.noHeader) {
             headers.splice(0);
         }
 
         let result = '';
-        const newline = this.config.stringify.newLineType === 'LF' ? '\n' : '\n\r';
+        const newline = this.config.stringify?.newLineType === 'LF' ? '\n' : '\n\r';
 
         if (headers.length > 0) {
             result += headers.join(',') + newline;
         }
 
         rows.forEach(row => result += row.join(',') + newline);
-
-        console.log(rows);
 
         result = result.replaceAll(/(^(\n\r|\n)|(\n\r|\n)$)/g, '');
 

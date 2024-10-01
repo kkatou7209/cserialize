@@ -1,29 +1,29 @@
 import type { Csv } from '@/model/csv.ts';
+import { RecursivePartial } from '@/types/RecursivePartial.d.ts';
 
 interface ParserConfig {
 
     parse: {
         /** ignore first row */
-        skipFirst?: boolean;
+        skipFirst: boolean;
     
         /** remove quotations at parsing */
-        removeQuote?: boolean;
+        removeQuote: boolean;
     };
 
     stringify: {
         /** wrap with quotation at stringifyng */
-        wrapWithQuote?: boolean;
+        wrapWithQuote: boolean;
         
         /** quotation type, which is used at stringifyng */
-        quoteType?: 'single' | 'double';
+        quoteType: 'single' | 'double';
         
         /** exclude header row at stringifying */
-        noHeader?: boolean;
+        noHeader: boolean;
 
         /** type of new line */
-        newLineType?: 'LF' | 'CRLF';
+        newLineType: 'LF' | 'CRLF';
     }
-    
 }
 
 /**
@@ -63,9 +63,16 @@ abstract class AbstractParser implements Parser {
      * 
      * @param config 
      */
-    public setConfig(config: ParserConfig): void {
+    public setConfig(config: RecursivePartial<ParserConfig>): void {
         this.config = {
-            ...config
+            parse: {
+                ...this.config.parse,
+                ...config.parse,
+            },
+            stringify: {
+                ...this.config.stringify,
+                ...config.stringify,
+            }
         }
     }
 

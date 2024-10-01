@@ -1,8 +1,9 @@
 import { CommaCsvParser } from '@/parser/impl/CommaCsvParser.ts';
-import type { Parser } from '@/parser/parser.ts';
+import type { AbstractParser, Parser, ParserConfig } from '@/parser/parser.ts';
 import { TabCsvParser } from '@/parser/impl/TabCsvParser.ts';
 import { SemicolonCsvParser } from '@/parser/impl/SemicolonCsvParser.ts';
 import { Csv } from '@/model/csv.ts';
+import type { RecursivePartial } from '@/types/RecursivePartial.d.ts';
 
 export type DelimiterOptions = 'comma' | 'tab' | 'semi';
 
@@ -17,7 +18,7 @@ export class Cserialize {
     /**
      * csv parser
      */
-    #parser: Parser;
+    #parser: AbstractParser;
 
     /**
      * csv data
@@ -30,15 +31,10 @@ export class Cserialize {
     #source: string | null = null;
 
     /**
-     * csv text file encoding
-     */
-    #fileEncoding = 'UTF-8'
-
-    /**
      * Returns current csv parser
      * @param parser 
      */
-    constructor(parser: Parser) {
+    constructor(parser: AbstractParser) {
         this.#parser = parser;
     }
 
@@ -47,7 +43,7 @@ export class Cserialize {
      * 
      * @param {Parser} parser csv parser
      */
-    public static use(parser: Parser): Cserialize {
+    public static use(parser: AbstractParser): Cserialize {
         return new Cserialize(parser);
     }
 
@@ -74,11 +70,16 @@ export class Cserialize {
     /**
      * Read csv data from string or file
      * 
-     * @param {string | File} csv --- string or file
+     * @param {string} csv
      */
-    public read(csv: string, fileEncoding: string = 'UTF-8'): Cserialize {
+    public read(csv: string): Cserialize {
         this.#source = csv;
-        this.#fileEncoding = fileEncoding;
+
+        return this;
+    }
+
+    public withConfig(config: RecursivePartial<ParserConfig>): Cserialize {
+        this.#parser.setConfig(config);
 
         return this;
     }
@@ -98,6 +99,10 @@ export class Cserialize {
         return this;
     }
 
+    /**
+     * Returns csv text
+     * @returns 
+     */
     public stringify(): string {
         if (this.#data === null) {
             throw new Error('trying to stringify null');
@@ -106,7 +111,7 @@ export class Cserialize {
     }
 
     /**
-     * 
+     * set object represents csv
      * @param {{ headers: string[]; rows: string[][] }} data 
      */
     public setData(data: { headers: string[]; rows: string[][] }): void {

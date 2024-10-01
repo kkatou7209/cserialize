@@ -20,6 +20,8 @@ Deno.test('config test', async (t) => {
 
         const config = parser.getConfig();
 
+        console.log(config)
+
         assertEquals(config.parse.removeQuote, true);
         assertEquals(config.parse.skipFirst, true);
         assertEquals(config.stringify.newLineType, 'LF');
