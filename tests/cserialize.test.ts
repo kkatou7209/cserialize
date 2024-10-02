@@ -1,40 +1,31 @@
 import { assert, assertEquals, assertFalse, assertThrows, assertStrictEquals } from '@std/assert';
-import Cserialize, { 
-    CommaCsvParser, 
-    TabCsvParser, 
-    SemicolonCsvParser
-} from '../mod.ts';
+import Cserialize from '../mod.ts';
 
-Deno.test('initialization test', async (t) => {
-    const source = `foo,bar,hoge\n\r"foo_0",bar_0,"hoge_0"\n\r"foo_1",bar_0,"hoge_1"\n\r"foo_2",bar_2,"hoge_2"`;
+Deno.test('parsing test', async (t) => {
 
-    await t.step('set data currectly', async () => {
-        const instance = Cserialize.delimiter('comma')
-            .read('')
+    await t.step('parse correctly with initial config', async () => {
+        const csv = `foo,bar,hoge\r\n"foo_0",bar_0,"hoge_0"\r\n"foo_1",bar_1,"hoge_1,hoge_1"\r\n"foo_2",bar_2,"hoge_2"`;
+    
+        const instance = Cserialize.read(csv).parse();
+    
+        assertEquals(instance.getData().headers, ['foo', 'bar', 'hoge']);
+        assertEquals(instance.getData().rows, [
+            ['"foo_0"', 'bar_0', '"hoge_0"'],
+            ['"foo_1"', 'bar_1', '"hoge_1,hoge_1"'],
+            ['"foo_2"', 'bar_2', '"hoge_2"']
+        ]);
+        assertEquals(instance.getData().maps, [
+            new Map([['foo', '"foo_0"'], ['bar', 'bar_0'], ['hoge', '"hoge_0"']]),
+            new Map([['foo', '"foo_1"'], ['bar', 'bar_1'], ['hoge', '"hoge_1,hoge_1"']]),
+            new Map([['foo', '"foo_2"'], ['bar', 'bar_2'], ['hoge', '"hoge_2"']]),
+        ])
     })
-})
 
-Deno.test('delimiter method test', async (t) => {
-    await t.step('parser is correctly set', async () => {
-        const cserializeComma = Cserialize.delimiter('comma');
-        assertEquals(cserializeComma.parser(), new CommaCsvParser());
-
-        const cserializeTab = Cserialize.delimiter('tab');
-        assertEquals(cserializeTab.parser(), new TabCsvParser());
-
-        const cserializeSemicolon = Cserialize.delimiter('semi');
-        assertEquals(cserializeSemicolon.parser(), new SemicolonCsvParser());
-    });
-
-    await t.step('should throw at unknown delimiter', async () => {
-        assertThrows(() => {
-            Cserialize.delimiter('unknown' as 'comma');
-        }, Error);
-    })
+    // TODO: test with more config pattern
 })
 
 Deno.test('setData method test', async (t) => {
-    const scerialize = Cserialize.use(new CommaCsvParser());
+    const scerialize = new Cserialize();
 
     await t.step('register data correctly', async () => {
         scerialize.setData({
@@ -45,7 +36,7 @@ Deno.test('setData method test', async (t) => {
             ]
         });
 
-        const data = scerialize.data();
+        const data = scerialize.getData();
 
         assertEquals(data.headers, ['foo', 'bar', 'hoge']);
         assertEquals(data.rows[0], ['foo_value_1', 'bar_value_1', 'hoge_value_1']);

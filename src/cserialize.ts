@@ -1,15 +1,6 @@
-import { CommaCsvParser } from '@/parser/impl/CommaCsvParser.ts';
-import type { AbstractParser, Parser, ParserConfig } from '@/parser/parser.ts';
-import { TabCsvParser } from '@/parser/impl/TabCsvParser.ts';
-import { SemicolonCsvParser } from '@/parser/impl/SemicolonCsvParser.ts';
-import { Csv } from '@/model/csv.ts';
+import { Parser , type ParserConfig, type OptionalParseConfig} from '@/parser.ts';
+import { Csv } from '@/csv.ts';
 import type { RecursivePartial } from '@/types/RecursivePartial.d.ts';
-
-export type DelimiterOptions = 'comma' | 'tab' | 'semi';
-
-export type CsvHeaders = string[];
-
-export type CsvRows = string[][];
 
 /**
  * Manager class 
@@ -18,12 +9,12 @@ export class Cserialize {
     /**
      * csv parser
      */
-    #parser: AbstractParser;
+    #parser: Parser;
 
     /**
      * csv data
      */
-    #data: Csv = new Csv();
+    #data: Csv;
 
     /**
      * csv source data
@@ -34,37 +25,37 @@ export class Cserialize {
      * Returns current csv parser
      * @param parser 
      */
-    constructor(parser: AbstractParser) {
-        this.#parser = parser;
-    }
+    public constructor(config?: OptionalParseConfig) {
+        this.#parser = new Parser();
+        this.#data = { headers: [], rows: [], maps: [] };
 
-    /**
-     * Returns instance with initializing Parser.
-     * 
-     * @param {Parser} parser csv parser
-     */
-    public static use(parser: AbstractParser): Cserialize {
-        return new Cserialize(parser);
-    }
-
-    /**
-     * Returns instance with setting Parser infered from 
-     * passed delimiter.
-     * 
-     * @param {string} delimiter 
-     * @returns {Cserialize} Cserialize instance
-     */
-    public static delimiter(delimiter: DelimiterOptions): Cserialize {
-        switch (delimiter) {
-            case 'comma':
-                return new Cserialize(new CommaCsvParser);
-            case 'tab':
-                return new Cserialize(new TabCsvParser);
-            case 'semi':
-                return new Cserialize(new SemicolonCsvParser);
-            default:
-                throw new Error(`unknown delimiter name: ${delimiter}`);
+        if (config) {
+            this.#parser.setConfig(config);
         }
+    }
+
+    /**
+     * Instanciate with setting csv text
+     * @param csv 
+     * @returns 
+     */
+    public static read(csv: string): Cserialize {
+        const instance = new Cserialize();
+
+        instance.read(csv);
+
+        return instance;
+    }
+
+    /**
+     * Instantiate with config
+     * @param  config 
+     * @returns 
+     */
+    public static withConfig(config: OptionalParseConfig): Cserialize {
+        const instance = new Cserialize(config);
+
+        return instance;
     }
 
     /**
@@ -74,12 +65,6 @@ export class Cserialize {
      */
     public read(csv: string): Cserialize {
         this.#source = csv;
-
-        return this;
-    }
-
-    public withConfig(config: RecursivePartial<ParserConfig>): Cserialize {
-        this.#parser.setConfig(config);
 
         return this;
     }
@@ -101,7 +86,7 @@ export class Cserialize {
 
     /**
      * Returns csv text
-     * @returns 
+     * @returns {string}
      */
     public stringify(): string {
         if (this.#data === null) {
@@ -121,21 +106,28 @@ export class Cserialize {
                 throw new Error('headers and rows have different length');
             }
         });
+        
+        const headers = data.headers.map(header => header.trim());
 
-        const _data = new Csv();
-
-        data.headers.forEach(header => _data.headers.push(header.trim()));
-        data.rows.forEach(row => _data.rows.push(row.map(value => value.trim())));
-
-        _data.headers.forEach((header, index) => {
+        const rows = data.rows.map(row => row.map(value => value.trim()));
+        
+        const maps = headers.map((header, index) => {
             const map = new Map();
-
-            _data.rows.forEach(row => map.set(header, row[index]));
-
-            _data.maps.push(map);
+            
+            rows.forEach(row => map.set(header, row[index]));
+            
+            return map;
         });
 
-        this.#data = _data;
+        this.#data = { headers, rows, maps } ;
+    }
+
+    /**
+     * Sets parsing and stringifying config
+     * @param {ParserConfig} config 
+     */
+    public setConfig(config: RecursivePartial<ParserConfig>) {
+        this.#parser.setConfig(config);
     }
 
     /**
@@ -143,23 +135,15 @@ export class Cserialize {
      * 
      * @returns {Csv | null}
      */
-    public data(): Csv {
+    public getData(): Csv {
         return this.#data;
-    }
-
-    public getHeaders(): CsvHeaders {
-        return this.#data.headers.map(header => header);
-    }
-
-    public getRows(): CsvRows {
-        return this.#data.rows.map(row => row.map(value => value));
     }
 
     /**
      * Returns csv value retrieved by row index and header name
      * 
-     * @param header 
-     * @param rowIndex 
+     * @param {string} header 
+     * @param {number} rowIndex 
      * @returns 
      */
     public getValueByHeader(header: string, rowIndex: number): string {
@@ -205,14 +189,6 @@ export class Cserialize {
         }
 
         return this.#data.rows[rowIndex][index];
-    }
-
-    /**
-     * Returns current parser
-     * @returns 
-     */
-    public parser(): Parser {
-        return this.#parser;
     }
 
     /**
