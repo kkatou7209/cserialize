@@ -2,7 +2,6 @@ import { assert, assertEquals, assertFalse, assertThrows, assertStrictEquals } f
 import Cserialize from '../mod.ts';
 
 Deno.test('parsing test', async (t) => {
-
     await t.step('parse correctly with initial config', async () => {
         const csv = `foo,bar,hoge\r\n"foo_0",bar_0,"hoge_0"\r\n"foo_1",bar_1,"hoge_1,hoge_1"\r\n"foo_2",bar_2,"hoge_2"`;
     
@@ -20,8 +19,6 @@ Deno.test('parsing test', async (t) => {
             new Map([['foo', '"foo_2"'], ['bar', 'bar_2'], ['hoge', '"hoge_2"']]),
         ])
     })
-
-    // TODO: test with more config pattern
 })
 
 Deno.test('setData method test', async (t) => {

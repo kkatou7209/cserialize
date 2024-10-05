@@ -2,8 +2,15 @@ import { Csv } from './csv.ts';
 import { intoRows, separate } from "./separater.ts";
 import { RecursivePartial } from '@/types/RecursivePartial.d.ts';
 
+export type DelimiterType = 'comma' | 'tab' | 'semi';
+
+export type QuoteType = 'single' | 'double';
+
+export type NewLineType = 'LF' | 'CRLF';
+
 export interface ParserConfig {
 
+    /** config of parsing */
     parse: {
         /** ignore first row */
         skipFirst: boolean;
@@ -12,21 +19,25 @@ export interface ParserConfig {
         removeQuote: boolean;
 
         /** delimiter of csv */
-        delimiter: 'comma' | 'tab' | 'semi'
+        delimiter: DelimiterType
     };
 
+    /** config of stringifying */
     stringify: {
         /** wrap with quotation at stringifyng */
         wrapWithQuote: boolean;
         
         /** quotation type, which is used at stringifyng */
-        quoteType: 'single' | 'double';
+        quoteType: QuoteType;
         
         /** exclude header row at stringifying */
         noHeader: boolean;
 
         /** type of new line */
-        newLineType: 'LF' | 'CRLF';
+        newLineType: NewLineType;
+
+        /** delimiter of csv */
+        joinWith: DelimiterType
     }
 }
 
@@ -51,13 +62,14 @@ export class Parser {
             quoteType: 'double',
             noHeader: false,
             newLineType: 'CRLF',
+            joinWith: 'comma'
         }
     };
 
     /**
      * Sets configuration
      * 
-     * @param config 
+     * @param {OptionalParseConfig} config 
      */
     public setConfig(config: OptionalParseConfig): void {
         this.config = {
@@ -73,7 +85,7 @@ export class Parser {
     }
 
     /**
-     * Returns config object
+     * Returns Parser config
      * 
      * @returns {ParserConfig}
      */
@@ -81,6 +93,12 @@ export class Parser {
         return this.config;
     }
 
+    /**
+     * Parses string to csv data object
+     * 
+     * @param {string} csv 
+     * @returns {Csv}
+     */
 	public parse(csv: string): Csv {
         const csvRowStrings = intoRows(csv);
 
@@ -99,7 +117,10 @@ export class Parser {
         if (!this.config.parse.skipFirst) {
             separate(delimiter, csvRowStrings[0]).forEach(val => headers.push(val));
             csvRowStrings.shift();
+        } else {
+            csvRowStrings.shift();
         }
+
 
         const rows = this.config.parse.removeQuote ?
             csvRowStrings.map(row => separate(delimiter, row).map(value => value.replace(/["']+/g, ''))) :
@@ -148,31 +169,46 @@ export class Parser {
         return data;
 	}
     
+    /**
+     * Stringifies csv data object to string
+     * 
+     * @param {Csv} csv 
+     * @returns {string}
+     */
 	public stringify(csv: Csv): string {
         const headers = csv.headers.map(header => header);
         let rows = csv.rows.map(row => row);
+
+        const quote = this.config.stringify?.quoteType === 'double' ? `"` : `'`;
 
 		if (this.config.stringify.wrapWithQuote) {
             rows = rows.map(row => {
                 return row.map(value => value.replaceAll(/("|')/g, ''));
             });
 
-            const quote = this.config.stringify?.quoteType === 'double' ? `"` : `'`;
-
             rows = rows.map(row => {
                 return row.map(value => quote + value + quote);
             })
+        } else {
+            rows = rows.map(row => {
+                return row.map(val => val.match(/^[^"'].*,.*[^"']$/) ? (quote + val + quote) : val);
+            })
         }
         
+        const delimiter = 
+            this.config.stringify.joinWith === 'semi' ? ';' :
+            this.config.stringify.joinWith === 'tab' ? '\t' :
+            ',';
 
         let result = '';
+
         const newline = this.config.stringify.newLineType === 'LF' ? '\n' : '\r\n';
 
         if (!this.config.stringify.noHeader) {
-            result += headers.join(',') + newline;
+            result += headers.join(delimiter) + newline;
         }
 
-        rows.forEach(row => result += row.join(',') + newline);
+        rows.forEach(row => result += row.join(delimiter) + newline);
 
         result = result.replaceAll(/(^(\r\n|\n)|(\r\n|\n)$)/g, '');
 

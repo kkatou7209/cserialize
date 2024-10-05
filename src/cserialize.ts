@@ -1,4 +1,4 @@
-import { Parser , type ParserConfig, type OptionalParseConfig} from '@/parser.ts';
+import { Parser , type ParserConfig, type OptionalParseConfig, type DelimiterType, type QuoteType, type NewLineType} from '@/parser.ts';
 import { Csv } from '@/csv.ts';
 import type { RecursivePartial } from '@/types/RecursivePartial.d.ts';
 
@@ -65,6 +65,83 @@ export class Cserialize {
      */
     public read(csv: string): Cserialize {
         this.#source = csv;
+
+        return this;
+    }
+
+    /**
+     * Skips first row
+     * @returns 
+     */
+    public skipFirst(): Cserialize {
+        this.#parser.setConfig({ parse: { skipFirst: true } });
+
+        return this;
+    }
+
+    /**
+     * Remove quotes of values
+     * @returns {Cserialize}
+     */
+    public removeQuote(): Cserialize {
+        this.#parser.setConfig({ parse: { removeQuote: true } });
+
+        return this;
+    }
+
+    /**
+     * Set delimiter
+     * @param {DelimiterType} delimiter 
+     * @returns {Cserialize}
+     */
+    public delimiter(delimiter: DelimiterType): Cserialize {
+        this.#parser.setConfig({ parse: { delimiter } });
+
+        return this;
+    }
+
+    /**
+     * Wraps values with quote at stringifying
+     * 
+     * @param {QuoteType} quoteType 
+     * @returns {Cserialize}
+     */
+    public wrapWithQuote(quoteType: QuoteType = 'double'): Cserialize {
+        this.#parser.setConfig({ stringify: { wrapWithQuote: true, quoteType } });
+        
+        return this;
+    }
+
+    /**
+     * Stringifies with no header
+     * 
+     * @returns {Cserialize} 
+     */
+    public noHeader(): Cserialize {
+        this.#parser.setConfig({ stringify: { noHeader: true } });
+
+        return this;
+    }
+
+    /**
+     * Sets new line format
+     * @param {NewLineType} newLineType 
+     * @returns {Cserialize}
+     */
+    public newLine(newLineType: NewLineType): Cserialize {
+        this.#parser.setConfig({ stringify: { newLineType } });
+
+        return this;
+    }
+
+    /**
+     * Sets delimiter at stringifying
+     * 
+     * @param {DelimiterType} delimiter 
+     * @returns {Cserialize}
+     */
+    public joinWith(delimiter: DelimiterType): Cserialize {
+        this.#parser.setConfig({ stringify: { joinWith: delimiter } });
 
         return this;
     }
